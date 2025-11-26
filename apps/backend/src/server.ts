@@ -1,12 +1,12 @@
 import Fastify from 'fastify';
 import pino from 'pino';
-import corsPlugin from './plugins/cors';
-import prismaPlugin from './plugins/prisma';
-import redisPlugin from './plugins/redis';
-import rateLimitPlugin from './plugins/rateLimit';
-import shortenRoute from './routes/shorten';
-import redirectRoute from './routes/redirect';
-import { env } from './env';
+import corsPlugin from './plugins/cors.js';
+import prismaPlugin from './plugins/prisma.js';
+import redisPlugin from './plugins/redis.js';
+import rateLimitPlugin from './plugins/rateLimit.js';
+import shortenRoute from './routes/shorten.js';
+import redirectRoute from './routes/redirect.js';
+import { env } from './env.js';
 import sensible from '@fastify/sensible';
 
 const fastify = Fastify({
