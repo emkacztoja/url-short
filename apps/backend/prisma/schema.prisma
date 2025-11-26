@@ -1,3 +1,18 @@
+// NOTE: schema.prisma updated to include admin/admin-panel fields and click analytics.
+// After editing this schema you should create and apply a Prisma migration and commit
+// the generated migration folder (prisma/migrations). Example workflow (local):
+//
+//   cd apps/backend
+//   export DATABASE_URL='postgresql://USER:PASSWORD@HOST:PORT/DBNAME'
+//   npx prisma migrate dev --name add_admin_fields_clicks
+//   npx prisma generate
+//
+// In production/CI apply with:
+//   npx prisma migrate deploy
+//   npx prisma generate
+//
+// There's also a helper script at `apps/backend/scripts/run_prisma_migration.sh`.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,14 +32,21 @@ model Url {
   deletedAt   DateTime?
   isActive    Boolean  @default(true)
 
+  // relation to detailed click records (optional)
   clicksRecords Click[]
+
+  @@index([isActive])
+  @@index([createdAt])
 }
 
 model Click {
   id        Int      @id @default(autoincrement())
   urlId     Int
-  url       Url      @relation(fields: [urlId], references: [id])
+  url       Url      @relation(fields: [urlId], references: [id], onDelete: Cascade)
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
+
+  @@index([urlId])
+  @@index([createdAt])
 }
