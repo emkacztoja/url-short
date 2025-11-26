@@ -8,6 +8,8 @@ import shortenRoute from './routes/shorten.js';
 import redirectRoute from './routes/redirect.js';
 import { env } from './env.js';
 import sensible from '@fastify/sensible';
+import adminAuthPlugin from './plugins/adminAuth.js';
+import adminUrlsRoute from './routes/admin/urls.js';
 
 const fastify = Fastify({
   logger: pino({ level: 'info' }),
@@ -18,8 +20,10 @@ await fastify.register(redisPlugin);
 await fastify.register(sensible);
 await fastify.register(corsPlugin);
 await fastify.register(rateLimitPlugin);
+await fastify.register(adminAuthPlugin);
 await fastify.register(shortenRoute);
 await fastify.register(redirectRoute);
+await fastify.register(adminUrlsRoute, { prefix: '/api/admin' });
 
 const start = async () => {
   try {

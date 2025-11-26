@@ -13,5 +13,5 @@ model Url {
   originalUrl String
   clicks      Int      @default(0)
   createdAt   DateTime @default(now())
+  isActive    Boolean  @default(true)
 }
-

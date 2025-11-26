@@ -24,6 +24,7 @@ export const createShortUrl = async (
 export const resolveShortUrl = async (fastify: FastifyInstance, shortId: string) => {
   const cached = await fastify.redis.get(shortId);
   if (cached) {
+    // when cached, assume active and increment clicks in DB
     await fastify.prisma.url.update({
       where: { shortId },
       data: { clicks: { increment: 1 } },
@@ -32,6 +33,8 @@ export const resolveShortUrl = async (fastify: FastifyInstance, shortId: string)
   }
   const url = await fastify.prisma.url.findUnique({ where: { shortId } });
   if (!url) return null;
+  // Respect isActive flag
+  if (url.isActive === false) return null;
   await fastify.redis.set(shortId, url.originalUrl, 'EX', TTL_SECONDS);
   await fastify.prisma.url.update({
     where: { shortId },
