@@ -31,22 +31,43 @@ export const createShortUrl = async (
 export const resolveShortUrl = async (fastify: FastifyInstance, shortId: string) => {
   const cached = await fastify.redis.get(shortId);
   if (cached) {
-    // when cached, assume active and increment clicks in DB
-    await fastify.prisma.url.update({
-      where: { shortId },
-      data: { clicks: { increment: 1 } },
-    });
+    // when cached, attempt to increment clicks in DB using updateMany to avoid P2025
+    try {
+      const res = await fastify.prisma.url.updateMany({
+        where: { shortId },
+        data: { clicks: { increment: 1 } },
+      });
+      if (res.count === 0) {
+        // DB row missing — remove stale cache and treat as not found
+        await fastify.redis.del(shortId);
+        return null;
+      }
+    } catch (err) {
+      // In case of unexpected errors, log and return cached value (best-effort)
+      fastify.log.error({ err }, 'Error incrementing clicks for cached shortId');
+    }
     return cached;
   }
+
   const url = await fastify.prisma.url.findUnique({ where: { shortId } });
   if (!url) return null;
   // Respect isActive flag and expiresAt
   if (url.isActive === false) return null;
   if (url.expiresAt && url.expiresAt.getTime() <= Date.now()) return null;
   await fastify.redis.set(shortId, url.originalUrl, 'EX', TTL_SECONDS);
-  await fastify.prisma.url.update({
-    where: { shortId },
-    data: { clicks: { increment: 1 } },
-  });
+  // Increment clicks using updateMany to avoid race errors
+  try {
+    const res = await fastify.prisma.url.updateMany({
+      where: { shortId },
+      data: { clicks: { increment: 1 } },
+    });
+    if (res.count === 0) {
+      // somehow deleted after fetch; remove cache and return null
+      await fastify.redis.del(shortId);
+      return null;
+    }
+  } catch (err) {
+    fastify.log.error({ err }, 'Error incrementing clicks after resolve');
+  }
   return url.originalUrl;
 };
