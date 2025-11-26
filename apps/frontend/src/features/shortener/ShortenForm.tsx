@@ -43,7 +43,12 @@ export const ShortenForm = () => {
       setErrorMessage(parsed.error.errors[0].message);
       return;
     }
-    mutation.mutate(parsed.data);
+    // Omit customAlias when it's empty so backend will generate a nanoid
+    const payload: any = { ...parsed.data };
+    if (payload.customAlias === '' || (typeof payload.customAlias === 'string' && payload.customAlias.trim() === '')) {
+      delete payload.customAlias;
+    }
+    mutation.mutate(payload);
   };
 
   return (
