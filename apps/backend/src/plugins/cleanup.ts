@@ -14,7 +14,8 @@ export default fp(async (fastify) => {
         fastify.log.info(`Cleanup: deleted ${res.count} expired URLs`);
       }
     } catch (err) {
-      fastify.log.error('Cleanup error', err);
+      // pass error as object to pino logger to satisfy typing
+      fastify.log.error({ err }, 'Cleanup error');
     }
   };
 
@@ -26,4 +27,3 @@ export default fp(async (fastify) => {
     clearInterval(timer);
   });
 });
-
