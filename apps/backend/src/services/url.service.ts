@@ -16,7 +16,8 @@ export const createShortUrl = async (
   const url = await fastify.prisma.url.create({
     data: { shortId, originalUrl },
   });
-  await fastify.redis.set(shortId, originalUrl, { EX: TTL_SECONDS });
+  // ioredis: set(key, value, 'EX', seconds)
+  await fastify.redis.set(shortId, originalUrl, 'EX', TTL_SECONDS);
   return url;
 };
 
@@ -31,11 +32,10 @@ export const resolveShortUrl = async (fastify: FastifyInstance, shortId: string)
   }
   const url = await fastify.prisma.url.findUnique({ where: { shortId } });
   if (!url) return null;
-  await fastify.redis.set(shortId, url.originalUrl, { EX: TTL_SECONDS });
+  await fastify.redis.set(shortId, url.originalUrl, 'EX', TTL_SECONDS);
   await fastify.prisma.url.update({
     where: { shortId },
     data: { clicks: { increment: 1 } },
   });
   return url.originalUrl;
 };
-

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { resolveShortUrl } from '../services/url.service';
+import { resolveShortUrl } from '../services/url.service.js';
 
 export default async function redirectRoute(fastify: FastifyInstance) {
   fastify.get('/:shortId', async (request, reply) => {
@@ -11,4 +11,3 @@ export default async function redirectRoute(fastify: FastifyInstance) {
     reply.redirect(302, destination);
   });
 }
-

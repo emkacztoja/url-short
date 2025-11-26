@@ -1,10 +1,9 @@
 import type { FastifyInstance } from 'fastify';
-import { shortenRequestSchema } from '../schemas/url.schema';
-import { createShortUrl } from '../services/url.service';
+import { shortenRequestSchema } from '../schemas/url.schema.js';
+import { createShortUrl } from '../services/url.service.js';
 
 export default async function shortenRoute(fastify: FastifyInstance) {
   fastify.post('/api/shorten', {
-    schema: { body: shortenRequestSchema },
     handler: async (request, reply) => {
       const { originalUrl, customAlias } = shortenRequestSchema.parse(request.body);
       const url = await createShortUrl(fastify, originalUrl, customAlias);
@@ -12,4 +11,3 @@ export default async function shortenRoute(fastify: FastifyInstance) {
     },
   });
 }
-

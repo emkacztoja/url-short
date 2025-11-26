@@ -1,20 +1,23 @@
 import fp from 'fastify-plugin';
-import { createClient } from 'redis';
-import { env } from '../env';
+import Redis from 'ioredis';
+import { env } from '../env.js';
 
-const redis = createClient({ url: env.REDIS_URL });
+const redis = new Redis(env.REDIS_URL);
 
 export default fp(async (fastify) => {
-  await redis.connect();
+  // ioredis connects automatically; ensure ready before decorating
+  await new Promise((resolve, reject) => {
+    redis.once('ready', resolve);
+    redis.once('error', reject);
+  });
   fastify.decorate('redis', redis);
   fastify.addHook('onClose', async () => {
-    await redis.disconnect();
+    await redis.quit();
   });
 });
 
 declare module 'fastify' {
   interface FastifyInstance {
-    redis: ReturnType<typeof createClient>;
+    redis: Redis;
   }
 }
-
